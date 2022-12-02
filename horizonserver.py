@@ -90,15 +90,20 @@ class HorizonServer:
     @property
     def gssapi_authenticators(self):
         """
-        :return: an iterable list, containing all the _GSSAPIAuthenticator
+        :return: an iterable list, containing all the GSSAPIAuthenticator
         """
         url = f'https://{self.address}/rest/config/v1/gssapi-authenticators'
         response = self.http_get(url=url)
         json_list = response.json()
-        return _IterableList(json_list, _GSSAPIAuthenticator, self)
+        # return _IterableList(json_list, GSSAPIAuthenticator, self)
+        return [GSSAPIAuthenticator(item['id'], self) for item in json_list]
 
-    def create_gssapi_authenticator(self, allow_legacy_clients, allow_ntlm_fallback, connection_server_ids,
-                                    enable_login_as_current_user, enforce_channel_bindings, trigger_mode):
+    def create_gssapi_authenticator(self, allow_legacy_clients=False,
+                                    allow_ntlm_fallback=False,
+                                    connection_server_ids=None,
+                                    enable_login_as_current_user=False,
+                                    enforce_channel_bindings=False,
+                                    trigger_mode='DISABLED'):
         """
         :param allow_legacy_clients: True or False
         :param allow_ntlm_fallback: True or False
@@ -106,19 +111,19 @@ class HorizonServer:
         :param enable_login_as_current_user: True or False
         :param enforce_channel_bindings: True or False
         :param trigger_mode: "ENABLED" or "DISABLED"
-        :return: new instance of _GSSAPIAuthenticator
+        :return: new instance of GSSAPIAuthenticator
         """
         url = f'https://{self.address}/rest/config/v1/gssapi-authenticators'
         data = dict()
         data['allow_legacy_clients'] = allow_legacy_clients
         data['allow_ntlm_fallback'] = allow_ntlm_fallback
-        data['connection_server_ids'] = connection_server_ids
+        data['connection_server_ids'] = [] if not connection_server_ids else connection_server_ids
         data['enable_login_as_current_user'] = enable_login_as_current_user
         data['enforce_channel_bindings'] = enforce_channel_bindings
         data['trigger_mode'] = trigger_mode
         response = self.http_post(url=url, json=data)
         new_gssapi_authenticator_id = response.headers['Location'].split('/')[-1]
-        return _GSSAPIAuthenticator(new_gssapi_authenticator_id, self)
+        return GSSAPIAuthenticator(new_gssapi_authenticator_id, self)
 
     def delete_gssapi_authenticator(self, gssapi_authenticator_id):
         url = 'https://{}/rest/config/v1/gssapi-authenticators/{}'.format(self.address, gssapi_authenticator_id)
@@ -127,56 +132,16 @@ class HorizonServer:
     @property
     def connection_servers(self):
         """
-        :return: an iterable list, containing all the _ConnectionServer
+        :return: an iterable list, containing all the ConnectionServer
         """
         url = f'https://{self.address}/rest/config/v1/connection-servers'
         response = self.http_get(url=url)
         json_list = response.json()
-        return _IterableList(json_list, _ConnectionServer, self)
+        # return _IterableList(json_list, ConnectionServer, self)
+        return [ConnectionServer(item['id'], self) for item in json_list]
 
 
-class _IterableList:
-    """
-    An iterable list, containing some json dict objects that has the same character of having a key "id"
-    """
-    def __init__(self, json_list, item_class, horizon_server):
-        self.json_list = json_list
-        self.horizon_server = horizon_server
-        self.item_class = item_class
-
-    def __getitem__(self, index):
-        return self.item_class(self.json_list[index]['id'], self.horizon_server)
-
-    def __len__(self):
-        return len(self.json_list)
-
-    def __str__(self):
-        return json.dumps(self.json_list)
-
-    def __contains__(self, item):
-        if not hasattr(item, 'id'):
-            return False
-        for json_item in self.json_list:
-            if item.id == json_item['id']:
-                return True
-        return False
-
-    def __iter__(self):
-        for item in self.json_list:
-            yield self.item_class(item['id'], self.horizon_server)
-
-    @property
-    def ids(self):
-        """
-        :return: list, the ids of the items in _IterableList
-        """
-        ids = []
-        for json_item in self.json_list:
-            ids.append(json_item['id'])
-        return ids
-
-
-class _GSSAPIAuthenticator:
+class GSSAPIAuthenticator:
 
     def __init__(self, gssapi_authenticator_id, horizon_server: HorizonServer):
         self.id = gssapi_authenticator_id
@@ -244,7 +209,7 @@ class _GSSAPIAuthenticator:
         return self.json_get_data['allow_ntlm_fallback']
 
 
-class _ConnectionServer:
+class ConnectionServer:
 
     def __init__(self, connection_server_id, horizon_server: HorizonServer):
         self.id = connection_server_id

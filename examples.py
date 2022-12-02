@@ -5,11 +5,11 @@ def test_enable_login_as_current_user(enabled=True):
     password = r'ca$hc0w'
     domain = r'wbd'
     address = '10.117.30.135'
-    cs = HorizonServer(username=username, password=password, domain=domain, address=address)
-    if not cs.gssapi_authenticators:
-        cs.create_gssapi_authenticator(False, False, cs.connection_servers.ids, enabled, False, 'DISABLED')
+    hs = HorizonServer(username=username, password=password, domain=domain, address=address)
+    if not hs.gssapi_authenticators:
+        hs.create_gssapi_authenticator(False, False, [cs.id for cs in hs.connection_servers], enabled, False, 'DISABLED')
     else:
-        for gssapi_auth in cs.gssapi_authenticators:
+        for gssapi_auth in hs.gssapi_authenticators:
             gssapi_auth.enable_login_as_current_user = enabled
 
 
