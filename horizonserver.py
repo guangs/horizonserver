@@ -3,6 +3,7 @@ import json
 import urllib3
 import logging
 import sys
+from typing import Tuple, List
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 logging.basicConfig(level=logging.INFO,
@@ -70,7 +71,7 @@ class HorizonServer:
         response.raise_for_status()
         return response
 
-    def _login(self):
+    def _login(self) -> Tuple[str, str]:
         login_url = f'https://{self.address}/rest/login'
         data = {"username": self._username,
                 "password": self._password, "domain": self._domain}
@@ -80,12 +81,12 @@ class HorizonServer:
         access_token = data['access_token']
         return access_token, refresh_token
 
-    def _logout(self):
+    def _logout(self) -> None:
         logout_url = f'https://{self.address}/rest/logout'
         data = {"refresh_token": self._refresh_token}
         requests.post(url=logout_url, json=data, verify=False)
 
-    def _refresh(self):
+    def _refresh(self) -> None:
         refresh_url = f'https://{self.address}/rest/refresh'
         data = {"refresh_token": self._refresh_token}
         response = requests.post(url=refresh_url, json=data, verify=False)
@@ -93,7 +94,7 @@ class HorizonServer:
         self._access_token = data['access_token']
 
     @property
-    def gssapi_authenticators(self):
+    def gssapi_authenticators(self) -> List["GSSAPIAuthenticator"]:
         """
         :return: an iterable list, containing all the GSSAPIAuthenticator
         """
@@ -108,7 +109,7 @@ class HorizonServer:
                                     connection_server_ids=None,
                                     enable_login_as_current_user=False,
                                     enforce_channel_bindings=False,
-                                    trigger_mode='DISABLED'):
+                                    trigger_mode='DISABLED') -> "GSSAPIAuthenticator":
         """
         :param allow_legacy_clients: True or False
         :param allow_ntlm_fallback: True or False
@@ -132,13 +133,13 @@ class HorizonServer:
             '/')[-1]
         return GSSAPIAuthenticator(new_gssapi_authenticator_id, self)
 
-    def delete_gssapi_authenticator(self, gssapi_authenticator_id):
+    def delete_gssapi_authenticator(self, gssapi_authenticator_id: str) -> None:
         url = 'https://{}/rest/config/v1/gssapi-authenticators/{}'.format(
             self.address, gssapi_authenticator_id)
         self.http_delete(url=url, params={'forced': 'true'})
 
     @property
-    def connection_servers(self):
+    def connection_servers(self) -> List["ConnectionServer"]:
         """
         :return: an iterable list, containing all the ConnectionServer
         """
@@ -151,7 +152,7 @@ class HorizonServer:
 
 class GSSAPIAuthenticator:
 
-    def __init__(self, gssapi_authenticator_id, horizon_server: HorizonServer):
+    def __init__(self, gssapi_authenticator_id: str, horizon_server: "HorizonServer"):
         self.id = gssapi_authenticator_id
         self.horizon_server = horizon_server
         self.url = 'https://{}/rest/config/v1/gssapi-authenticators/{}'.format(
@@ -222,7 +223,7 @@ class GSSAPIAuthenticator:
 
 class ConnectionServer:
 
-    def __init__(self, connection_server_id, horizon_server: HorizonServer):
+    def __init__(self, connection_server_id: str, horizon_server: "HorizonServer"):
         self.id = connection_server_id
         self.horizon_server = horizon_server
         self.url = 'https://{}/rest/config/v1/connection-servers/{}'.format(
