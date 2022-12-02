@@ -25,7 +25,7 @@ class HorizonServer:
                                  'Accept': '*/*'}
 
     def http_post(self, url, data=None, json=None, headers=None, verify=False, timeout=None,
-                  **kwargs) -> requests.Response:
+                  **kwargs):
         if headers is None:
             headers = self._default_headers
         response = requests.post(url=url, data=data, json=json, headers=headers, verify=verify, timeout=timeout,
@@ -37,7 +37,7 @@ class HorizonServer:
         return response
 
     def http_put(self, url, data=None, json=None, headers=None, verify=False, timeout=None,
-                 **kwargs) -> requests.Response:
+                 **kwargs):
         if headers is None:
             headers = self._default_headers
         response = requests.put(url=url, data=data, json=json, headers=headers, verify=verify, timeout=timeout,
@@ -48,7 +48,7 @@ class HorizonServer:
         response.raise_for_status()
         return response
 
-    def http_get(self, url, params=None, headers=None, verify=False, timeout=None, **kwargs) -> requests.Response:
+    def http_get(self, url, params=None, headers=None, verify=False, timeout=None, **kwargs):
         if headers is None:
             headers = self._default_headers
         response = requests.get(
@@ -59,7 +59,7 @@ class HorizonServer:
         response.raise_for_status()
         return response
 
-    def http_delete(self, url, params=None, headers=None, verify=False, timeout=None, **kwargs) -> requests.Response:
+    def http_delete(self, url, params=None, headers=None, verify=False, timeout=None, **kwargs):
         if headers is None:
             headers = self._default_headers
         response = requests.delete(
@@ -100,7 +100,6 @@ class HorizonServer:
         url = f'https://{self.address}/rest/config/v1/gssapi-authenticators'
         response = self.http_get(url=url)
         json_list = response.json()
-        # return _IterableList(json_list, GSSAPIAuthenticator, self)
         return [GSSAPIAuthenticator(item['id'], self) for item in json_list]
 
     def create_gssapi_authenticator(self, allow_legacy_clients=False,
@@ -145,13 +144,12 @@ class HorizonServer:
         url = f'https://{self.address}/rest/config/v1/connection-servers'
         response = self.http_get(url=url)
         json_list = response.json()
-        # return _IterableList(json_list, ConnectionServer, self)
         return [ConnectionServer(item['id'], self) for item in json_list]
 
 
 class GSSAPIAuthenticator:
 
-    def __init__(self, gssapi_authenticator_id, horizon_server: HorizonServer):
+    def __init__(self, gssapi_authenticator_id, horizon_server):
         self.id = gssapi_authenticator_id
         self.horizon_server = horizon_server
         self.url = 'https://{}/rest/config/v1/gssapi-authenticators/{}'.format(
@@ -222,7 +220,7 @@ class GSSAPIAuthenticator:
 
 class ConnectionServer:
 
-    def __init__(self, connection_server_id, horizon_server: HorizonServer):
+    def __init__(self, connection_server_id, horizon_server):
         self.id = connection_server_id
         self.horizon_server = horizon_server
         self.url = 'https://{}/rest/config/v1/connection-servers/{}'.format(
